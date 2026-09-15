@@ -1,0 +1,156 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from scipy.fft import fft, ifft, fftfreq
+import librosa as lb
+
+def unwind(a):
+    return np.roll(a, len(a) // 2)
+
+def Generator(filename):
+   
+   Waveform, Sample_Rate = lb.load(filename, sr=None) # keeps the sampling rate of the audio file
+   Duration = len(Waveform) / Sample_Rate
+   print(f"The duration of the recording is {Duration}")
+
+   Time = np.arange(0, Duration, 1/Sample_Rate)
+   Nyquist_Frequency = Sample_Rate / 2
+   FFT = fft(Waveform)
+   return Waveform, Time, Nyquist_Frequency, FFT, filename
+
+def Plotter(Waveform, Time, Nyquist_Frequency, FFT, Max_Freq, Start_ratio, End_ratio, filename):
+   
+   fig, ax = plt.subplots(nrows=2, ncols=2)
+
+    ###Nyquist requires rows = 3
+
+   fig.suptitle(f"Waveform and FFT Analysis for {filename}")
+   start_time = int(Start_ratio * len(Waveform))
+   end_time = int(End_ratio * len(Waveform))
+   Sample_Rate = 2 * Nyquist_Frequency
+
+   ax[0][0].plot(Time[start_time:end_time], np.real(Waveform)[start_time:end_time], label = "Real Waveform")
+   ax[0][0].set_title("Waveform: real part")
+   ax[0][0].set_xlabel("Time [s]")
+   ax[0][0].set_ylabel("Pressure")
+   ax[0][1].plot(Time[start_time:end_time], np.imag(Waveform)[start_time:end_time], label = "Imaginary Waveform")
+   ax[0][1].set_title("Waveform: imaginary part")
+   ax[0][1].set_xlabel("Time [s]")
+   ax[0][1].set_ylabel("Pressure")
+
+   Freqs = fftfreq(len(FFT), 1/Sample_Rate)
+   FFT_Real = np.real(FFT)
+   FFT_Imag = np.imag(FFT)
+
+   ax[1][0].plot(unwind(Freqs), unwind(FFT_Real), label="Real FFT")
+   ax[1][0].set_title(f"Zoomed FFT: real part, +/-{Max_Freq} Hz")
+   ax[1][0].set_xlim(-Max_Freq, Max_Freq)
+   ax[1][0].set_xlabel("Frequency [Hz]")
+   ax[1][0].set_ylabel("Real coefficient")
+
+   ax[1][1].plot(unwind(Freqs), unwind(FFT_Imag), label="Imaginary FFT")
+   ax[1][1].set_title(f"Zoomed FFT: imaginary part, +/-{Max_Freq} Hz")
+   ax[1][1].set_xlim(-Max_Freq, Max_Freq)
+   ax[1][1].set_xlabel("Frequency [Hz]")
+   ax[1][1].set_ylabel("Imaginary coefficient")
+   
+#    ax[2][0].plot(unwind(Freqs), unwind(FFT_Real), label = "Real FFT")
+#    ax[2][0].set_title("Full FFT: real part")
+#    ax[2][0].set_xlim(-Nyquist_Frequency, Nyquist_Frequency)
+#    ax[2][0].set_xlabel("Frequency [Hz]")
+#    ax[2][0].set_ylabel("Real coefficient")
+  
+#    ax[2][1].plot(unwind(Freqs), unwind(FFT_Imag), label="Imaginary FFT")
+#    ax[2][1].set_title("Full FFT: imaginary part")
+#    ax[2][1].set_xlim(-Nyquist_Frequency, Nyquist_Frequency)
+#    ax[2][1].set_xlabel("Frequency [Hz]")
+#    ax[2][1].set_ylabel("Imaginary coefficient")
+
+   
+  
+   for axis in ax.flat:
+       axis.legend(loc="best")
+       axis.grid(True, alpha=0.3)
+
+   fig.tight_layout()
+   
+
+def Amps(Waveform, Time, Nyquist_Frequency, FFT):
+   """----------------------------------------------------------------------------------------------
+   Isolating Important Amplitudes
+   ----------------------------------------------------------------------------------------------"""
+   Sample_Rate = 2 * Nyquist_Frequency
+   Freqs = fftfreq( len(FFT), 1/Sample_Rate)
+   FFT_Real = np.real(FFT)
+   FFT_Imag = np.imag(FFT)
+
+   Smallest_Amp = 100/1
+
+   """
+   This code I pulled from a previous homework assignment, HW9
+
+
+   From the FFT, I found just the amplitudes with squares greater than Smallest_Amp,
+   which I decided was a reasonable bound since I could visually make out the points included and so I could not consider them to be noise.
+   I then enumerated and indexed the frequencies I plotted over to find the corresponding frequencies, and then printed
+   the frequencies and the normalized amplitudes, which I explain below.
+   """
+
+   FFT_Real_Amps = []
+   FFT_Imag_Amps = []
+   N = len(Waveform)
+   for i,x in enumerate(list(FFT_Real)):
+       if x**2 >= Smallest_Amp:
+           k = Freqs[i]
+           FFT_Real_Amps += [[k, 2*x/N]]
+   for j,y in enumerate(list(FFT_Imag)):
+       if y**2 >= Smallest_Amp:
+           k = Freqs[j]
+           FFT_Imag_Amps += [[k, 2*y/N]]
+   print("k and Amplitudes the real part of our FFT")
+   print(FFT_Real_Amps)
+   print("k and Amplitudes the imaginary part of our FFT")
+   print(FFT_Imag_Amps)
+
+   #----------------------------------------------------------------------------------------------
+   #   We need a better way of finding the amplitudes, because these waveforms are a lot more
+   #   complicated than the ones we did in class.
+   #----------------------------------------------------------------------------------------------
+
+#----------------------------------------------------------------------------------------------
+#   Test Info 
+#----------------------------------------------------------------------------------------------
+
+filename_1 = 'PHY64_bb4 2.wav'
+
+Info_1 = Generator(filename_1)
+
+Plotter(Info_1[0], Info_1[1], Info_1[2], Info_1[3], 1000, 0, 0.05, Info_1[4])
+
+Amps(Info_1[0], Info_1[1], Info_1[2], Info_1[3])
+
+filename_2 = 'PHY64_bb5 2.wav'
+
+Info_2 = Generator(filename_2)
+
+Plotter(Info_2[0], Info_2[1], Info_2[2], Info_2[3], 1000, 0, 0.05, Info_2[4])
+
+Amps(Info_2[0], Info_2[1], Info_2[2], Info_2[3])
+
+filename_3 = 'fakesoon.wav'
+
+Info_3 = Generator(filename_3)
+
+Plotter(Info_3[0], Info_3[1], Info_3[2], Info_3[3], 1000, 0, 0.05, Info_3[4])
+
+Amps(Info_3[0], Info_3[1], Info_3[2], Info_3[3])
+
+filename_4 = 'fakesoonbb5.wav'
+
+Info_4 = Generator(filename_4)
+
+Plotter(Info_4[0], Info_4[1], Info_4[2], Info_4[3], 1000, 0, 0.05, Info_4[4])
+
+Amps(Info_4[0], Info_4[1], Info_4[2], Info_4[3])
+
+plt.show()
