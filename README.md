@@ -1,6 +1,6 @@
 # Computational Projects
 
-A collection of my computational physics projects, exploring collective motion and acoustics through Python simulations and data analysis.
+A collection of my computational physics projects, exploring collective motion, heat diffusion, and acoustics through Python simulations and data analysis.
 
 ## Projects
 
@@ -11,6 +11,14 @@ A collection of my computational physics projects, exploring collective motion a
 A two-dimensional simulation of self-propelled particles moving at a constant speed. Particles align with nearby neighbors, with random angular noise and periodic boundaries. A live quiver plot shows the motion, and the notebook records observations from varying the interaction radius and noise strength.
 
 Based on [Vicsek et al., *Novel Type of Phase Transition in a System of Self-Driven Particles* (1995)](https://doi.org/10.1103/PhysRevLett.75.1226).
+
+### Molten Earth Model: Cooling by Heat Diffusion
+
+[Open the notebook](molten-earth-model/molten-earth-model.ipynb)
+
+A model of an initially hot Earth cooling through a surface held at a fixed temperature. The notebook derives the temperature profile using Fourier transforms and Gaussian heat kernels, then animates temperature versus depth as time advances on a single plot with fixed axes.
+
+Based on Christina Hueschen and Rob Phillips, *The Restless Cell: Continuum Theories of Living Matter* (2024), §5.5, “The Cooling of the Earth and the Theory of Evolution.”
 
 ### Acoustics: Fourier Analysis and Timbre
 
@@ -30,4 +38,5 @@ python -m jupyter lab
 ```
 
 - **Vicsek model:** Open `vicsek-model/viscek-model.ipynb`, run the initialization cell to display the widget, then run the simulation cell. The animation uses `%matplotlib widget` and updates the existing plot without storing frame history.
+- **Molten Earth model:** Open `molten-earth-model/molten-earth-model.ipynb`, run **Initialization and plotting**, then run **Time evolution** to start the animation. Rerun the time-evolution cell to replay; increase `animation_duration` for slower playback.
 - **Acoustics:** Open `acoustics/Project/acousticsproject.ipynb` and run the cells in order. Keep the notebook's working directory set to `acoustics/Project/` so its relative audio paths resolve.
